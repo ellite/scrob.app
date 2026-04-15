@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scrob — Self-Hosted Media Tracking</title>
+  <meta name="description" content="Track your movies and shows. Sync with Jellyfin, Plex, and Emby. Your own private Letterboxd + Trakt." />
+  <meta name="author" content="Scrob" />
+  <meta name="robots" content="index, follow" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#09090b" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Scrob" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:url" content="https://scrob.app/" />
+  <meta property="og:title" content="Scrob — Self-Hosted Media Tracking" />
+  <meta property="og:description" content="Track your movies and shows. Sync with Jellyfin, Plex, and Emby. Your own private Letterboxd + Trakt." />
+  <meta property="og:image" content="https://scrob.app/images/scrob-dashboard.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Scrob — Self-Hosted Media Tracking" />
+  <meta name="twitter:description" content="Track your movies and shows. Sync with Jellyfin, Plex, and Emby. Your own private Letterboxd + Trakt." />
+  <meta name="twitter:image" content="https://scrob.app/images/scrob-dashboard.png" />
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Scrob" />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://scrob.app/" />
+  <link rel="icon" href="images/scrob-logo.png" />
+  <script defer src="https://umami.henrique.pt/script.js" data-website-id="6584da72-2bd5-4b05-913b-894072ea1cda"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #09090b;
+      --bg-card:   #18181b;
+      --border:    #27272a;
+      --text:      #f4f4f5;
+      --muted:     #a1a1aa;
+      --dim:       #52525b;
+      --accent:    #6d28d9;
+      --accent-2:  #2563eb;
+      --radius:    12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Nav ─────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(1.5rem, 5vw, 5rem);
+      height: 64px;
+      background: rgba(9,9,11,.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .nav-logo img { width: 28px; height: 28px; }
+
+    .nav-links { display: flex; align-items: center; gap: 1rem; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .45rem 1.1rem;
+      border-radius: 8px;
+      font-size: .875rem;
+      font-weight: 600;
+      transition: opacity .15s, transform .15s;
+      cursor: pointer;
+    }
+    .btn:hover { opacity: .85; transform: translateY(-1px); }
+    .btn-ghost { color: var(--muted); }
+    .btn-ghost:hover { color: var(--text); opacity: 1; }
+    .btn-primary {
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    /* ── Hero ────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      padding: clamp(5rem, 12vw, 8rem) clamp(1.5rem, 5vw, 5rem) 0;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    /* radial glow behind hero */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 500px;
+      background: radial-gradient(ellipse at center, rgba(109,40,217,.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .3rem .85rem;
+      border-radius: 999px;
+      border: 1px solid rgba(109,40,217,.4);
+      background: rgba(109,40,217,.1);
+      font-size: .8rem;
+      font-weight: 600;
+      color: #a78bfa;
+      margin-bottom: 1.75rem;
+      letter-spacing: .03em;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -.03em;
+      max-width: 820px;
+      margin: 0 auto 1.25rem;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--muted);
+      max-width: 540px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 4rem;
+    }
+
+    .btn-hero {
+      padding: .7rem 1.6rem;
+      font-size: 1rem;
+      border-radius: 10px;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Screenshot frame ────────────────────────────── */
+    .hero-screen {
+      position: relative;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .screen-frame {
+      border-radius: 14px 14px 0 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      box-shadow: 0 -20px 80px rgba(109,40,217,.2), 0 0 0 1px rgba(255,255,255,.05);
+    }
+
+    .screen-bar {
+      background: #1c1c1e;
+      padding: .55rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+
+    .screen-frame img {
+      display: block;
+      width: 100%;
+    }
+
+    /* ── Sections shared ─────────────────────────────── */
+    section { padding: clamp(4rem, 8vw, 7rem) clamp(1.5rem, 5vw, 5rem); }
+
+    .section-label {
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #a78bfa;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -.025em;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+
+    .section-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 520px;
+    }
+
+    /* ── Features grid ───────────────────────────────── */
+    .features { background: var(--bg); }
+
+    .features-header { text-align: center; margin-bottom: 3.5rem; }
+    .features-header .section-sub { margin: 0 auto; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: border-color .2s;
+    }
+    .feature-card:hover { border-color: #52525b; }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(109,40,217,.15);
+      border: 1px solid rgba(109,40,217,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: .4rem;
+    }
+
+    .feature-card p {
+      font-size: .875rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ── Screenshot showcase ─────────────────────────── */
+    .showcase { background: var(--bg); }
+
+    .showcase-row {
+      display: flex;
+      align-items: center;
+      gap: clamp(2rem, 6vw, 5rem);
+      max-width: 1100px;
+      margin: 0 auto 5rem;
+    }
+    .showcase-row:last-child { margin-bottom: 0; }
+    .showcase-row.reverse { flex-direction: row-reverse; }
+
+    .showcase-text { flex: 0 0 38%; }
+    .showcase-text h3 {
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      margin-bottom: .75rem;
+    }
+    .showcase-text p {
+      font-size: .95rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .showcase-img { flex: 1; min-width: 0; }
+    .showcase-img img {
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 40px rgba(0,0,0,.5);
+      display: block;
+    }
+
+    .showcase-img.mobile-stacked {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      min-height: 560px;
+    }
+
+    .mobile-stacked img {
+      width: 260px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 50px rgba(0,0,0,.6);
+      transition: transform .3s;
+    }
+
+    .mobile-stacked .img-back {
+      transform: translateX(-60px);
+      z-index: 1;
+    }
+
+    .mobile-stacked .img-front {
+      position: absolute;
+      top: 40px;
+      left: calc(50% + 10px);
+      z-index: 2;
+    }
+
+    /* ── Install / CTA ───────────────────────────────── */
+    .cta-section {
+      text-align: center;
+      background: linear-gradient(180deg, var(--bg) 0%, #0d0d14 100%);
+      border-top: 1px solid var(--border);
+    }
+
+    .cta-glow {
+      display: inline-block;
+      padding: 3rem clamp(1.5rem, 5vw, 5rem) clamp(4rem, 8vw, 7rem);
+      position: relative;
+    }
+
+    .cta-section h2 { margin-bottom: .75rem; }
+    .cta-section .section-sub { margin: 0 auto 2rem; }
+
+    .install-block {
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .65rem 1rem;
+      gap: 1rem;
+      font-size: .875rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+    .install-block span { color: #a78bfa; }
+
+    /* ── Footer ──────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem clamp(1.5rem, 5vw, 5rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-weight: 700;
+      font-size: .95rem;
+    }
+    .footer-logo img { width: 22px; height: 22px; }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      font-size: .825rem;
+      color: var(--dim);
+      transition: color .15s;
+    }
+    .footer-links a:hover { color: var(--muted); }
+
+    .footer-right {
+      font-size: .8rem;
+      color: var(--dim);
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 1000px) {
+      .showcase-row,
+      .showcase-row.reverse { flex-direction: column; }
+      .showcase-text { flex: none; width: 100%; text-align: center; }
+    }
+
+    @media (max-width: 768px) {
+      .showcase-img.mobile-stacked { min-height: 420px; }
+      .mobile-stacked img { width: 190px; }
+      .mobile-stacked .img-back  { transform: translateX(-60px); }
+      .mobile-stacked .img-front { top: 30px; left: calc(50% - 20px); }
+
+      footer { flex-direction: column; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <img src="images/scrob-logo.png" alt="Scrob" />
+      Scrob
+    </a>
+    <div class="nav-links">
+      <a href="#features" class="btn btn-ghost">Features</a>
+      <a href="https://github.com/ellite/scrob" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
+        GitHub
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Open Source &amp; Self-Hosted
+    </div>
+    <h1>Your media.<br /><span>Tracked your way.</span></h1>
+    <p class="hero-sub">
+      Sync with Jellyfin, Plex, and Emby. Track watch history, ratings, and lists.
+      Your own private Letterboxd&nbsp;+&nbsp;Trakt.
+    </p>
+    <div class="hero-cta">
+      <a href="https://github.com/ellite/scrob" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-hero">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
+        Get Started
+      </a>
+      <a href="#features" class="btn btn-secondary btn-hero">See features</a>
+    </div>
+    <div class="hero-screen">
+      <div class="screen-frame">
+        <div class="screen-bar">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+        </div>
+        <img src="images/scrob-dashboard.png" alt="Scrob dashboard" width="1000"/>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="features-header">
+      <p class="section-label">Features</p>
+      <h2>Everything you need.<br />Nothing you don't.</h2>
+      <p class="section-sub">A clean, focused tracker built around the media servers you already use.</p>
+    </div>
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg>
+        </div>
+        <h3>Media Server Sync</h3>
+        <p>Seamlessly connect and sync with Jellyfin, Plex, and Emby. Bring all your media libraries together in one place.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8v12M17 20l4-4M17 20l-4-4"/></svg>
+        </div>
+        <h3>Two-Way Metadata</h3>
+        <p>Push watched state and ratings back to your media servers. Keep everything perfectly aligned across all your instances.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h3>Real-Time Scrobbling</h3>
+        <p>Webhook-based playback tracking. Mark items as watched the moment you finish them — automatically.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <h3>Ratings &amp; Lists</h3>
+        <p>Rate what you watch and organise everything into personal lists. Share lists with others or keep them private.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <h3>TMDB Discovery</h3>
+        <p>Browse trending, discover by genre and streaming provider, and get rich metadata for every title.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <h3>One-Click Requests</h3>
+        <p>Connect Radarr and Sonarr to request any discovered title for download with a single click, directly from the detail page.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </div>
+        <h3>Trakt Integration</h3>
+        <p>Connect your Trakt account to import history and ratings, and push new activity back out.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        </div>
+        <h3>PWA — Install Anywhere</h3>
+        <p>Works as a Progressive Web App on any device. Install it on your phone and use it like a native app.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Screenshot showcase -->
+  <section class="showcase">
+
+    <div class="showcase-row">
+      <div class="showcase-text">
+        <p class="section-label">Detail Pages</p>
+        <h3>Everything about a title, in one place.</h3>
+        <p>Cast, ratings, file details, quality info, genres — all pulled together from TMDB and your library. Rate, add to lists, or send a one-click download request to Radarr or Sonarr, without leaving the page.</p>
+      </div>
+      <div class="showcase-img">
+        <img src="images/scrob-item.png" alt="Movie detail page" width="800" loading="lazy" />
+      </div>
+    </div>
+
+    <div class="showcase-row reverse">
+      <div class="showcase-text">
+        <p class="section-label">Light Mode</p>
+        <h3>Easy on the eyes, day or night.</h3>
+        <p>Light or Dark theme? You choose.</p>
+      </div>
+      <div class="showcase-img">
+        <img src="images/scrob-light.png" alt="Light mode discover page" width="800" loading="lazy" />
+      </div>
+    </div>
+
+    <div class="showcase-row">
+      <div class="showcase-text">
+        <p class="section-label">Mobile</p>
+        <h3>Your watch history, always in your pocket.</h3>
+        <p>Install Scrob as a PWA on your phone and get a fully native-feeling app. Browse history, manage lists, and discover new titles on the go.</p>
+      </div>
+      <div class="showcase-img mobile-stacked">
+        <img src="images/scrob-mobile.png" class="img-back" alt="Mobile watch history" width="260" loading="lazy" />
+        <img src="images/scrob-mobile-light.png" class="img-front" alt="Mobile watch history light" width="260" loading="lazy" />
+      </div>
+    </div>
+
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-glow">
+      <p class="section-label">Self-Hosted</p>
+      <h2>Your data. Your server.<br />Your rules.</h2>
+      <p class="section-sub">Deploy with Docker in minutes. No cloud accounts, no subscriptions, no tracking — just your media.</p>
+      <br />
+      <div class="install-block">
+        <span>$</span> docker compose up -d
+      </div>
+      <br />
+      <a href="https://github.com/ellite/scrob" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-hero">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
+        View on GitHub
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo">
+      <img src="images/scrob-logo.png" alt="Scrob" />
+      Scrob
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/ellite/scrob" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://github.com/ellite/scrob/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+      <a href="https://github.com/ellite/scrob/blob/main/LICENSE.md" target="_blank" rel="noopener noreferrer">GPL v3</a>
+      <a href="https://henrique.pt" target="_blank" rel="noopener noreferrer">Author</a>
+    </div>
+    <p class="footer-right">Built with ♥ for self-hosters.</p>
+  </footer>
+
+</body>
+</html>
