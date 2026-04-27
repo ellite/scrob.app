@@ -216,6 +216,7 @@
     .dot-y { background: #febc2e; }
     .dot-g { background: #28c840; }
 
+    .screen-frame picture { display: block; }
     .screen-frame img {
       display: block;
       width: 100%;
@@ -322,6 +323,7 @@
     }
 
     .showcase-img { flex: 1; min-width: 0; }
+    .showcase-img picture { display: block; }
     .showcase-img img {
       width: 100%;
       border-radius: var(--radius);
@@ -344,6 +346,8 @@
       box-shadow: 0 10px 50px rgba(0,0,0,.6);
       transition: transform .3s;
     }
+
+    .mobile-stacked picture { display: contents; }
 
     .mobile-stacked .img-back {
       transform: translateX(-60px);
@@ -449,7 +453,10 @@
   <!-- Nav -->
   <nav>
     <a href="#" class="nav-logo">
-      <img src="images/scrob-logo.png" alt="Scrob" />
+      <picture>
+        <source srcset="images/scrob-logo.webp" type="image/webp" />
+        <img src="images/scrob-logo.png" alt="Scrob" />
+      </picture>
       Scrob
     </a>
     <div class="nav-links">
@@ -486,7 +493,10 @@
           <div class="dot dot-y"></div>
           <div class="dot dot-g"></div>
         </div>
-        <img src="images/scrob-dashboard.png" alt="Scrob dashboard" width="1000"/>
+        <picture>
+          <source srcset="images/scrob-dashboard.webp" type="image/webp" />
+          <img src="images/scrob-dashboard.png" alt="Scrob dashboard" width="1000" />
+        </picture>
       </div>
     </div>
   </section>
@@ -577,7 +587,10 @@
         <p>Cast, ratings, file details, quality info, genres — all pulled together from TMDB and your library. Rate, add to lists, or send a one-click download request to Radarr or Sonarr, without leaving the page.</p>
       </div>
       <div class="showcase-img">
-        <img src="images/scrob-item.png" alt="Movie detail page" width="800" loading="lazy" />
+        <picture>
+          <source srcset="images/scrob-item.webp" type="image/webp" />
+          <img src="images/scrob-item.png" alt="Movie detail page" width="800" loading="lazy" />
+        </picture>
       </div>
     </div>
 
@@ -588,7 +601,10 @@
         <p>Light or Dark theme? You choose.</p>
       </div>
       <div class="showcase-img">
-        <img src="images/scrob-light.png" alt="Light mode discover page" width="800" loading="lazy" />
+        <picture>
+          <source srcset="images/scrob-light.webp" type="image/webp" />
+          <img src="images/scrob-light.png" alt="Light mode discover page" width="800" loading="lazy" />
+        </picture>
       </div>
     </div>
 
@@ -599,8 +615,14 @@
         <p>Install Scrob as a PWA on your phone and get a fully native-feeling app. Browse history, manage lists, and discover new titles on the go.</p>
       </div>
       <div class="showcase-img mobile-stacked">
-        <img src="images/scrob-mobile.png" class="img-back" alt="Mobile watch history" width="260" loading="lazy" />
-        <img src="images/scrob-mobile-light.png" class="img-front" alt="Mobile watch history light" width="260" loading="lazy" />
+        <picture>
+          <source srcset="images/scrob-mobile.webp" type="image/webp" />
+          <img src="images/scrob-mobile.png" class="img-back" alt="Mobile watch history" width="260" loading="lazy" />
+        </picture>
+        <picture>
+          <source srcset="images/scrob-mobile-light.webp" type="image/webp" />
+          <img src="images/scrob-mobile-light.png" class="img-front" alt="Mobile watch history light" width="260" loading="lazy" />
+        </picture>
       </div>
     </div>
 
@@ -627,7 +649,10 @@
   <!-- Footer -->
   <footer>
     <div class="footer-logo">
-      <img src="images/scrob-logo.png" alt="Scrob" />
+      <picture>
+        <source srcset="images/scrob-logo.webp" type="image/webp" />
+        <img src="images/scrob-logo.png" alt="Scrob" />
+      </picture>
       Scrob
     </div>
     <div class="footer-links">
